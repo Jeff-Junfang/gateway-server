@@ -1,0 +1,36 @@
+server:
+  port: 9041
+
+
+eureka:
+  instance:
+    preferIpAddress: true
+  client:
+    service-url:
+      defaultZone: http://eureka-server1:8761/eureka/,http://eureka-server2:8762/eureka/
+
+spring:
+  # 应用名称
+  application:
+    name: gateway-server
+  cloud:
+    gateway:
+      # 集成服务发现
+      discovery:
+        locator:
+          enabled: true
+      # 路由信息
+      routes:
+        id: user-route
+        uri: lb://user-service
+        predicates:
+          Path: /user/**
+        filters:
+          name: RequestRateLimiter
+          args:
+            # 处理请求率
+            redis-rate-limiter.replenishRate: 50
+            # 负载能力
+            redis-rate-limiter.burstCapacity: 100
+          RewritePath: /user/(?<path>.*), /$\{path}
+
